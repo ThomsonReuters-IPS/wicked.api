@@ -428,6 +428,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     subscriptionId: newSubscription.id,
                     applicationId: appInfo.id,
                     apiId: selectedApi.id,
+                    group: selectedApi.requiredGroup,
                     userId: userInfo.id,
                     planId: apiPlan.id
                 }
