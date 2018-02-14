@@ -40,10 +40,22 @@ approvals.getApprovals = function(app, res, loggedInUserId) {
     var userInfo = users.loadUser(app, loggedInUserId);
     if (!userInfo)
         return res.status(403).jsonp({ message: 'Not allowed' });
-    if (!userInfo.admin)
+    if (!userInfo.admin && !userInfo.approver)
         return res.status(403).jsonp({ message: 'Not allowed' });
-    
+
     var approvalInfos = approvals.loadApprovals(app);
+    //if user is approver, only show approval requests for api with same group as approver
+    approvalInfos = approvalInfos.filter(function(approval) {
+      if(userInfo.admin) return true; //show all approvals for admin
+      if(userInfo.approver && userInfo.groups){
+        for(var i=0; i< userInfo.groups.length; i++){
+          if(approval.api.requiredGroup && (userInfo.groups[i]==approval.api.requiredGroup)){
+            return true;
+          }
+        }
+      }
+      return false;
+    });
     res.json(approvalInfos);
 };
 

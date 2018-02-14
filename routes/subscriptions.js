@@ -405,6 +405,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     api: {
                         id: selectedApi.id,
                         name: selectedApi.name,
+                        requiredGroup: selectedApi.requiredGroup
                     },
                     application: {
                         id: appInfo.id,
@@ -614,7 +615,7 @@ subscriptions.patchSubscription = function (app, res, applications, loggedInUser
     var userInfo = users.loadUser(app, loggedInUserId);
     if (!userInfo)
         return res.status(403).jsonp({ message: 'Not allowed.' });
-    if (!userInfo.admin)
+    if (!userInfo.admin && !userInfo.approver)
         return res.status(403).jsonp({ message: 'Not allowed. Only admins can patch a subscription.' });
     var appSubs = subscriptions.loadSubscriptions(app, appId);
     var subsIndex = findSubsIndex(appSubs, apiId);

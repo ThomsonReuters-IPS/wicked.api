@@ -82,6 +82,28 @@ users.isUserAdmin = function (app, user) {
     return isAdmin;
 };
 
+users.isUserApprover = function (app, user) {
+    debug('isUserApprover()');
+    var groups = utils.loadGroups(app);
+
+    var isApprover = false;
+    for (var i = 0; i < user.groups.length; ++i) {
+        var groupId = user.groups[i];
+        for (var groupIndex = 0; groupIndex < groups.groups.length; ++groupIndex) {
+            var group = groups.groups[groupIndex];
+            if (groupId != group.id)
+                continue;
+            if (group.approverGroup) {
+                isApprover = true;
+                break;
+            }
+        }
+        if (isApprover)
+            break;
+    }
+    return isApprover;
+};
+
 /* Does the user belong to a specific group, or is he an admin? */
 users.hasUserGroup = function (app, userInfo, group) {
     debug('hasUserGroup()');
@@ -125,7 +147,10 @@ users.loadUser = function (app, userId) {
     else if (userInfo.firstName && !userInfo.lastName)
         userInfo.name = userInfo.firstName;
     else
-        userInfo.name = 'Unknown User';    userInfo.admin = users.isUserAdmin(app, userInfo);
+        userInfo.name = 'Unknown User';
+
+    userInfo.admin = users.isUserAdmin(app, userInfo);
+    userInfo.approver = users.isUserApprover(app, userInfo);
     // Add generic links
     userInfo._links = {
         self: { href: '/users/' + userId },
@@ -177,7 +202,7 @@ function checkClientIdAndSecret(app, userInfo) {
         globalSettings.api &&
         globalSettings.api.portal &&
         globalSettings.api.portal.enableApi) {
-        
+
         var requiredGroup = globalSettings.api.portal.requiredGroup;
         if (requiredGroup) {
             if (userInfo.groups &&
@@ -187,7 +212,7 @@ function checkClientIdAndSecret(app, userInfo) {
             entitled = true;
         }
     }
-    
+
     if (entitled) {
         debug('entitled');
         if (!userInfo.clientId)
@@ -335,13 +360,13 @@ users.createUser = function (app, res, userCreateInfo) {
             delete freshUser.password;
 
         res.status(201).json(freshUser);
-        
+
         webhooks.logEvent(app, {
             action: webhooks.ACTION_ADD,
             entity: webhooks.ENTITY_USER,
             data: {
                 userId: newId,
-                email: userCreateInfo.email, 
+                email: userCreateInfo.email,
                 customId: userCreateInfo.customId
             }
         });
@@ -483,7 +508,7 @@ users.patchUser = function (app, res, loggedInUserId, userId, userInfo) {
             if (user.password)
                 delete user.password;
             res.json(user);
-            
+
             webhooks.logEvent(app, {
                 action: webhooks.ACTION_UPDATE,
                 entity: webhooks.ENTITY_USER,
@@ -541,7 +566,7 @@ users.deleteUser = function (app, res, loggedInUserId, userId) {
             fs.unlinkSync(userFileName);
 
         res.status(204).json('');
-        
+
         webhooks.logEvent(app, {
             action: webhooks.ACTION_DELETE,
             entity: webhooks.ENTITY_USER,
