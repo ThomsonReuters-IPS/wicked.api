@@ -242,6 +242,8 @@ paths:
                       type: string
                     adminGroup:
                       type: boolean
+                    approverGroup:
+                      type: boolean
               _links:
                 type: object
                 properties:
@@ -862,10 +864,10 @@ paths:
                 pendingEvents:
                   description: Number of events in the event queue; healthy is 0
                   type: number
-              
+
         403:
           description: Not allowed
-  
+
   /templates/chatbot:
     get:
       description: Gets the Chatbot Mustache templates
@@ -889,13 +891,13 @@ paths:
                 type: string
               subscriptionAdded:
                 type: string
-              subscriptionDeleted: 
+              subscriptionDeleted:
                 type: string
               approvalRequired:
                 type: string
-              lostPasswordRequest: 
+              lostPasswordRequest:
                 type: string
-              verifyEmailRequest: 
+              verifyEmailRequest:
                 type: string
   /templates/email/{templateId}:
     get:
@@ -916,7 +918,7 @@ paths:
           description: Successful response
         404:
           description: Not found
-  
+
   '/auth-servers':
     get:
       description: Get a list of available authorization servers
@@ -948,7 +950,7 @@ paths:
             $ref: '#/definitions/authServerType'
         404:
           description: Not found
-          
+
 definitions:
   apiType:
     title: Api
@@ -1234,4 +1236,3 @@ definitions:
         type: string
       url:
         type: string
-  

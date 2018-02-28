@@ -192,24 +192,41 @@ function makeHealthEntry(pingName, pingUrl, apiErr, apiResult, apiBody) {
         };
     }
 
-    var pingResponse = utils.getJson(apiBody);
-    pingResponse.name = pingName;
-    pingResponse.pingUrl = pingUrl;
-    pingResponse.pendingEvents = -1; // May be overwritten
+    try {
+        var pingResponse = utils.getJson(apiBody);
+        pingResponse.name = pingName;
+        pingResponse.pingUrl = pingUrl;
+        pingResponse.pendingEvents = -1; // May be overwritten
 
-    if (pingName === 'kong') {
-        // These are from the portal, should not be returned
-        if (pingResponse.version)
-            delete pingResponse.version;
-        if (pingResponse.gitBranch)
-            delete pingResponse.gitBranch;
-        if (pingResponse.gitLastCommit)
-            delete pingResponse.gitLastCommit;
-        if (pingResponse.buildDate)
-            delete pingResponse.buildDate;
+        if (pingName === 'kong') {
+            // These are from the portal, should not be returned
+            if (pingResponse.version)
+                delete pingResponse.version;
+            if (pingResponse.gitBranch)
+                delete pingResponse.gitBranch;
+            if (pingResponse.gitLastCommit)
+                delete pingResponse.gitLastCommit;
+            if (pingResponse.buildDate)
+                delete pingResponse.buildDate;
+        }
+
+        return pingResponse;
+    } catch (err) {
+        debug('pingResponse: Couldn\'t extract health info from body:');
+        debug(apiBody);
+        debug(err);
+        // Deliberate
+
+        return {
+            name: pingName,
+            message: 'Could not parse pingResponse: ' + err.message,
+            error: err,
+            uptime: -1,
+            healthy: 0,
+            pingUrl: pingUrl,
+            pendingEvents: -1,
+        };
     }
-
-    return pingResponse;
 }
 
 systemhealth.getSystemHealthInternal = function (app) {

@@ -1,18 +1,18 @@
 {
-  "version": "0.12.1",
+  "version": "0.12.4",
   "private": true,
   "dependencies": {
-    "chai": "3.5.0",
-    "portal-env": "../portal-env.tgz",
-    "express": "4.15.3",
-    "request": "2.74.0",
-    "body-parser": "1.15.2",
-    "debug": "2.2.0",
-    "morgan": "1.7.0",
-    "js-yaml": "3.6.0",
     "async": "2.0.1",
     "bcrypt-nodejs": "0.0.3",
-    "node-uuid": "1.4.7"
+    "body-parser": "1.15.2",
+    "chai": "3.5.0",
+    "debug": "2.2.0",
+    "express": "4.15.3",
+    "js-yaml": "3.6.0",
+    "morgan": "1.7.0",
+    "node-uuid": "1.4.7",
+    "portal-env": "file:../portal-env.tgz",
+    "request": "2.74.0"
   },
   "scripts": {
     "start": "node ./bin/api"

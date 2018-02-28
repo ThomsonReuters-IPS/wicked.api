@@ -4,6 +4,7 @@ var path = require('path');
 var fs = require('fs');
 var debug = require('debug')('portal-api:apis');
 var yaml = require('js-yaml');
+var request = require('request');
 
 var utils = require('./utils');
 var users = require('./users');
@@ -354,6 +355,105 @@ function injectTokenEndpoint(globalSettings, swaggerJson) {
     paths['/oauth2/token'] = oauthPath;
 }
 
+// Looks like this:
+// {
+//     "<apiId>": {
+//         "date": <date of read>,
+//         "valid": true/false,
+//         "swagger": <swagger JSON document>
+//     }
+// }    
+const _swaggerMap = {};
+function resolveSwagger(globalSettings, apiInfo, requestPath, fileName, callback) {
+    debug('resolveSwagger(' + fileName + ')');
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    if (_swaggerMap[apiInfo.id]) {
+        const apiData = _swaggerMap[apiInfo.id];
+        if ((new Date()) - apiData.date < FIVE_MINUTES) {
+            // We'll return the cached data
+            if (apiData.valid)
+                return callback(null, apiData.swagger);
+            // Invalid cached data
+            return callback(new Error('Invalid swagger data for API ' + apiId));
+        }
+        // We'll refresh the data, fall past
+    }
+
+    function injectAuthAndReturn(swaggerJson) {
+        if (!apiInfo.auth || apiInfo.auth == "key-auth") {
+            // Inject a new parameter for the API key.
+            // globalSettings.api.headerName,
+            var apikeyParam = {
+                in: "header",
+                name: globalSettings.api.headerName,
+                required: false,
+                type: "string",
+                description: "API Key to authorize with API Gateway"
+            };
+            injectParameter(swaggerJson, apikeyParam);
+        } else if (apiInfo.auth == "oauth2") {
+            debug('Injecting OAuth2');
+            var authParam = {
+                in: "header",
+                name: "Authorization",
+                required: true,
+                type: "string",
+                description: 'The OAuth2 Bearer token, "Bearer ..."'
+            };
+            injectParameter(swaggerJson, authParam);
+            injectTokenEndpoint(globalSettings, swaggerJson);
+        }
+
+        swaggerJson.host = globalSettings.network.apiHost;
+        swaggerJson.basePath = requestPath;
+        swaggerJson.schemes = [globalSettings.network.schema];
+
+        // Cache it for a while
+        _swaggerMap[apiInfo.id] = {
+            date: new Date(),
+            valid: true,
+            swagger: swaggerJson
+        };
+
+        return callback(null, swaggerJson);
+    }
+
+    try {
+        const swaggerText = fs.readFileSync(fileName, 'utf8');
+        const rawSwagger = JSON.parse(swaggerText);
+        if (rawSwagger.swagger) { // version, e.g. "2.0"
+            return injectAuthAndReturn(rawSwagger);
+        } else if (rawSwagger.href) {
+            // We have a href property inside the Swagger, we will try to retrieve it
+            // from an URL here.
+            utils.replaceEnvVars(rawSwagger);
+            // We must be able to just get this thing
+            request.get({
+                url: rawSwagger.href
+            }, (err, apiRes, apiBody) => {
+                if (err)
+                    return callback(err);
+                try {
+                    const rawSwaggerRemote = utils.getJson(apiBody);
+                    return injectAuthAndReturn(rawSwaggerRemote);
+                } catch (err) {
+                    return callback(new Error('Could not parse remote Swagger from ' + rawSwagger.href));
+                }
+            });
+        } else {
+            // Bad case.
+            throw new Error('The swagger file does neither contain a "swagger" nor a "href" property: ' + fileName);
+        }
+    } catch (err) {
+        // Cache failure for five minutes
+        _swaggerMap[apiInfo.id] = {
+            date: new Date(),
+            valid: false
+        };
+        return callback(err);
+    }
+}
+
 apis.getSwagger = function (app, res, loggedInUserId, apiId) {
     debug('getSwagger(): ' + apiId);
     if (apiId == '_portal')
@@ -380,44 +480,17 @@ apis.getSwagger = function (app, res, loggedInUserId, apiId) {
     var apiInfo = apiList.apis.find(function (anApi) { return anApi.id == apiId; });
 
     // Read it, we want to do stuff with it.
-    try {
-        var swaggerJson = require(swaggerFileName);
-
-        if (!apiInfo.auth || apiInfo.auth == "key-auth") {
-            // Inject a new parameter for the API key.
-            // globalSettings.api.headerName,
-            var apikeyParam = {
-                in: "header",
-                name: globalSettings.api.headerName,
-                required: false,
-                type: "string",
-                description: "API Key to authorize with API Gateway"
-            };
-            injectParameter(swaggerJson, apikeyParam);
-        } else if (apiInfo.auth == "oauth2") {
-            debug('Injecting OAuth2');
-            var authParam = {
-                in: "header",
-                name: "Authorization",
-                required: true,
-                type: "string",
-                description: 'The OAuth2 Bearer token, "Bearer ..."'
-            };
-            injectParameter(swaggerJson, authParam);
-
-            injectTokenEndpoint(globalSettings, swaggerJson);
+    // resolveSwagger might read directly from the swagger file, or, if the
+    // swagger JSON contains a href property, get it from a remote location.
+    resolveSwagger(globalSettings, apiInfo, requestPath, swaggerFileName, (err, swaggerJson) => {
+        if (err) {
+            return res.status(500).json({
+                message: 'Could not resolve the Swagger JSON file, an error occurred.',
+                error: err
+            });
         }
-
-        swaggerJson.host = globalSettings.network.apiHost;
-        swaggerJson.basePath = requestPath;
-        swaggerJson.schemes = [globalSettings.network.schema];
-        //swaggerJson.schemes = ["http"];
-
-        // OK, that worked
         return res.json(swaggerJson);
-    } catch (err) {
-        return res.status(500).jsonp({ message: 'Internal Server Error! Could not parse Swagger, check your files.' + err });
-    }
+    });
 };
 
 apis._portalSwagger = null;
