@@ -287,7 +287,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
     var apiPlan = apiPlans[apiPlanIndex];
 
     // Required group? Or Admin, they may also.
-    if (selectedApi.requiredGroup) {
+    if (selectedApi.requiredGroup && !selectedApi.partner) {
         // If the user is admin, hasUserGroup will always return true
         let hasGroup = users.hasUserGroup(app, userInfo, selectedApi.requiredGroup);
         if (!hasGroup)
