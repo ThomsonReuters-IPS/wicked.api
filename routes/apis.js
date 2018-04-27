@@ -79,7 +79,7 @@ apis.getApis = function (app, res, loggedInUserId) {
         var api = apiList.apis[i];
 
         var addApi = false;
-        if (!api.requiredGroup)
+        if (!api.requiredGroup || api.partner)
             addApi = true;
         else if (groupDict[api.requiredGroup])
             addApi = true;
@@ -146,7 +146,7 @@ apis.checkAccess = function (app, res, userId, apiId) {
         }
     }
     var selectedApi = apiList.apis[apiIndex];
-    if (!selectedApi.requiredGroup) // Public
+    if (!selectedApi.requiredGroup || selectedApi.partner) // Public or Partner
         return true;
 
     // If we didn't have a logged in user, we're out
