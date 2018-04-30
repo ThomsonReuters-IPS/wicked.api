@@ -180,7 +180,7 @@ subscriptions.getSubscriptions = function (app, res, applications, loggedInUserI
 
     var isAllowed = false;
     var adminOrCollab = false;
-    if (userInfo.admin) {
+    if (userInfo.admin || userInfo.approver) {
         isAllowed = true;
         adminOrCollab = true;
     }
@@ -429,6 +429,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                     subscriptionId: newSubscription.id,
                     applicationId: appInfo.id,
                     apiId: selectedApi.id,
+                    group: selectedApi.requiredGroup,
                     userId: userInfo.id,
                     planId: apiPlan.id
                 }
@@ -442,6 +443,7 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                         userId: userInfo.id,
                         applicationId: appInfo.id,
                         apiId: selectedApi.id,
+                        group: selectedApi.requiredGroup,
                         planId: apiPlan.id
                     }
                 });

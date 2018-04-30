@@ -155,7 +155,7 @@ applications.getApplications = function (app, res, loggedInUserId) {
     var userInfo = users.loadUser(app, loggedInUserId);
     if (!userInfo)
         return res.status(403).jsonp({ message: 'Not allowed.' });
-    if (!userInfo.admin)
+    if (!userInfo.admin && !userInfo.approver)
         return res.status(403).jsonp({ message: 'Not allowed. This is admin land.' });
 
     var appsIndex = applications.loadAppsIndex(app);
@@ -529,7 +529,7 @@ applications.addOwner = function (app, res, loggedInUserId, appId, ownerCreateIn
             // Persist user
             users.saveUser(app, userToAdd, loggedInUserId);
 
-            // Return appInfo        
+            // Return appInfo
             res.status(201).json(appInfo);
 
             // Webhook
