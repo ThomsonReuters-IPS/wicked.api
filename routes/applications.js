@@ -242,6 +242,7 @@ applications.createApplication = function (app, res, loggedInUserId, appCreateIn
             var newApp = {
                 id: appId,
                 name: appCreateInfo.name.substring(0, 128),
+                description: appCreateInfo.description.substring(0, 128),
                 redirectUri: appCreateInfo.redirectUri,
                 owners: [
                     {
@@ -317,6 +318,9 @@ applications.patchApplication = function (app, res, loggedInUserId, appId, appPa
         // Update app
         if (appPatchInfo.name)
             appInfo.name = appPatchInfo.name.substring(0, 128);
+        if (appPatchInfo.description)
+            appInfo.description = appPatchInfo.description.substring(0, 128);
+            
         if (redirectUri)
             appInfo.redirectUri = redirectUri;
 
