@@ -39,7 +39,7 @@ subscriptions.getSubscriptions = function (app, res, applications, loggedInUserI
 
             var isAllowed = false;
             var adminOrCollab = false;
-            if (userInfo.admin) {
+            if (userInfo.admin || userInfo.approver) {
                 isAllowed = true;
                 adminOrCollab = true;
             }
