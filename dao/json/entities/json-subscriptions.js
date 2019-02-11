@@ -68,15 +68,18 @@ class JsonSubscriptions {
 
     getAll(filter, orderBy, offset, limit, noCountCache, callback) {
         debug('getAll()');
-        // noCountCache not used here, it doesn't have any impact
-        this.jsonUtils.checkCallback(callback);
-        let allSubs;
-        try {
-            allSubs = this.getAllSync(filter, orderBy, offset, limit);
-        } catch (err) {
-            return callback(err);
-        }
-        return callback(null, allApps.rows, { count: allSubs.count, cached: false });
+        // // noCountCache not used here, it doesn't have any impact
+        // this.jsonUtils.checkCallback(callback);
+        // let allSubs;
+        // try {
+        //     allSubs = this.getAllSync(filter, orderBy, offset, limit);
+        // } catch (err) {
+        //     return callback(err);
+        // }
+        // return callback(null, allApps.rows, { count: allSubs.count, cached: false });
+        
+        // THIS IS NOT IMPLEMENTED FOR JSON:
+        return callback(utils.makeError(501, 'This functionality is not implemented for the JSON data store. Please use Postgres if it is needed.'));
     }
 
     getIndex(offset, limit, callback) {
