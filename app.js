@@ -218,7 +218,9 @@ app.setupHooks = () => {
     // Check system health once in a while (every 30 seconds)
     const checkHealthInterval = process.env.PORTAL_API_HEALTH_INTERVAL || '30000';
     debug('Setting system check interval to ' + checkHealthInterval);
-    setInterval(systemhealth.checkHealth, checkHealthInterval, app);
+    if (checkHealthInterval && checkHealthInterval > 0) {
+        setInterval(systemhealth.checkHealth, checkHealthInterval, app);
+    }
 };
 
 // throw 404 for anything else

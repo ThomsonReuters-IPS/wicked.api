@@ -21,6 +21,14 @@ fi
 
 if [[ "haufelexware/wicked." == "$DOCKER_PREFIX" ]] && [[ "$1" == "--push" ]]; then
     echo "INFO: Resolving env base tag for target tag ${DOCKER_TAG}..."
+    
+    if [ -z "$DOCKER_REGISTRY" ]; then
+        echo "WARNING: Env var DOCKER_REGISTRY not set, assuming official docker hub."
+        docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASSWORD}
+    else
+        docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASSWORD} ${DOCKER_REGISTRY}
+    fi
+
     docker pull haufelexware/wicked.env:next-onbuild-alpine
     export PORTAL_ENV_TAG=$(docker run --rm haufelexware/wicked.env:next-onbuild-alpine node node_modules/portal-env/getMatchingTag.js haufelexware wicked.env ${DOCKER_TAG})
     if [ -z "$PORTAL_ENV_TAG" ]; then

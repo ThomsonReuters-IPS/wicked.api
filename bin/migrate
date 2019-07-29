@@ -60,22 +60,21 @@ try {
         console.error(`ERROR: File ${fileName} does not exist.`);
         process.exit(1);
     }
-    
-    let content = fs.readFileSync(fileName, 'utf8');
-    
-    // resolve variable substitutions 
-    content = content.replace(new RegExp("[$]\{([^\}]+)\}", "g"), function(_unused, varName) {
 
-      varName = varName.toUpperCase();
-      
-      if (process.env[varName]) {
-        return process.env[varName];
-      }
-      else {
-        return "${" + varName + "}";
-      }
+    let content = fs.readFileSync(fileName, 'utf8');
+
+    // resolve variable substitutions 
+    content = content.replace(new RegExp("[$]\{([^\}]+)\}", "g"), function (_unused, varName) {
+
+        varName = varName.toUpperCase();
+
+        if (process.env[varName]) {
+            return process.env[varName];
+        } else {
+            return "${" + varName + "}";
+        }
     });
-    
+
     migrationConfig = JSON.parse(content);
 } catch (err) {
     console.error(`ERROR: Could not load migration config from ${fileName}`);

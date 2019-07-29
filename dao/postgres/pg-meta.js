@@ -93,6 +93,10 @@ class PgMeta {
     }
 
     populateSubscriptionApiGroup() {
+        if (utils.isMigrationMode()) {
+            info('Skipping "populateSubscriptionApiGroup() in migration mode.');
+            return;
+        }
         const apis = utils.loadApis();
         for (let i = 0; i < apis.apis.length; ++i) {
             const api = apis.apis[i];

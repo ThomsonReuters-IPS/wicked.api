@@ -8,7 +8,7 @@ const { debug, info, warn, error } = require('portal-env').Logger('portal-api:sw
 
 const swaggerUtils = function () { };
 
-swaggerUtils.injectOpenAPIAuth = function (swaggerJson, globalSettings, apiInfo, requestPaths) {
+swaggerUtils.injectOpenAPIAuth = function (swaggerJson, globalSettings, apiInfo, requestPaths, apiConfig) {
     if (!apiInfo.auth || apiInfo.auth == "key-auth") {
         const apikeyParam = [{ key: [] }];
         const securitySchemesParam = {
@@ -73,17 +73,19 @@ swaggerUtils.injectOpenAPIAuth = function (swaggerJson, globalSettings, apiInfo,
         debug('Injecting OAuth2');
     }
     // OpenAPI 3 uses "servers" instead of a basePath, host and schema
+    const host = apiConfig && apiConfig.api && apiConfig.api.host ? apiConfig.api.host : globalSettings.network.apiHost;
+
     swaggerJson.servers = [];
     for (let i = 0; i < requestPaths.length; ++i) {
         const p = requestPaths[i];
         swaggerJson.servers.push({
-            url: `${globalSettings.network.schema}://${globalSettings.network.apiHost}${p}`
+            url: `${globalSettings.network.schema}://${host}${p}`
         });
     }
     return swaggerJson;
 };
 
-swaggerUtils.injectSwaggerAuth = function (swaggerJson, globalSettings, apiInfo, requestPaths) {
+swaggerUtils.injectSwaggerAuth = function (swaggerJson, globalSettings, apiInfo, requestPaths, apiConfig) {
     // Swagger 2.0 doesn't support multiple paths, pick first
     const requestPath = requestPaths[0];
     if (!apiInfo.auth || apiInfo.auth == "key-auth") {
@@ -142,7 +144,7 @@ swaggerUtils.injectSwaggerAuth = function (swaggerJson, globalSettings, apiInfo,
         deleteEmptySecurityProperties(swaggerJson);
         debug('Injecting OAuth2');
     }
-    swaggerJson.host = globalSettings.network.apiHost;
+    swaggerJson.host = apiConfig && apiConfig.api && apiConfig.api.host ? apiConfig.api.host : globalSettings.network.apiHost;
     swaggerJson.basePath = requestPath;
     swaggerJson.schemes = [globalSettings.network.schema];
     return swaggerJson;
@@ -288,6 +290,11 @@ function lookupAuthMethod(globalSettings, apiId, authMethodRef) {
         return null;
     }
     
+    if (authMethodOrig.protected) {
+        info(`lookupAuthMethodConfig: Auth method ${authMethodRef} is protected, skipping.`);
+        return null;
+    }
+
     if (authMethodOrig.protected) {
         info(`lookupAuthMethodConfig: Auth method ${authMethodRef} is protected, skipping.`);
         return null;

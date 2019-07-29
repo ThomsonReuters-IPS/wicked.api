@@ -376,7 +376,7 @@ apis.getConfig = function (app, res, loggedInUserId, apiId) {
                     api: {
                         uris: configJson.api.uris,
                         host: configJson.api.host,
-                        protocol: url.parse(configJson.api.upstream_url).protocol 
+                        protocol: url.parse(configJson.api.upstream_url).protocol
                     }
                 };
             }
@@ -414,9 +414,9 @@ apis.getApiDesc = function (app, res, loggedInUserId, apiId) {
 //         "valid": true/false,
 //         "swagger": <swagger JSON document>
 //     }
-// }    
+// }
 const _swaggerMap = {};
-function resolveSwagger(globalSettings, apiInfo, requestPaths, fileName, callback) {
+function resolveSwagger(globalSettings, apiInfo, apiConfig, requestPaths, fileName, callback) {
     debug('resolveSwagger(' + fileName + ')');
     const FIVE_MINUTES = 5 * 60 * 1000;
     if (_swaggerMap[apiInfo.id]) {
@@ -438,8 +438,8 @@ function resolveSwagger(globalSettings, apiInfo, requestPaths, fileName, callbac
         }
 
         swaggerJson = (swaggerJson.openapi) ?
-            swaggerUtils.injectOpenAPIAuth(swaggerJson, globalSettings, apiInfo, requestPaths) ://Open API 3.0
-            swaggerUtils.injectSwaggerAuth(swaggerJson, globalSettings, apiInfo, requestPaths); //Version 2.0
+            swaggerUtils.injectOpenAPIAuth(swaggerJson, globalSettings, apiInfo, requestPaths, apiConfig) ://Open API 3.0
+            swaggerUtils.injectSwaggerAuth(swaggerJson, globalSettings, apiInfo, requestPaths, apiConfig); //Version 2.0
 
         // Cache it for a while
         _swaggerMap[apiInfo.id] = {
@@ -525,7 +525,7 @@ apis.getSwagger = function (app, res, loggedInUserId, apiId) {
         // Read it, we want to do stuff with it.
         // resolveSwagger might read directly from the swagger file, or, if the
         // swagger JSON contains a href property, get it from a remote location.
-        resolveSwagger(globalSettings, apiInfo, requestPaths, swaggerFileName, (err, swaggerJson) => {
+        resolveSwagger(globalSettings, apiInfo, configJson, requestPaths, swaggerFileName, (err, swaggerJson) => {
             if (err) {
                 error(err);
                 return res.status(500).json({
