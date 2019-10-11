@@ -411,7 +411,6 @@ subscriptions.addSubscription = function (app, res, applications, loggedInUserId
                             application: {
                                 id: appInfo.id,
                                 name: appInfo.name,
-                                description: appInfo.description,
                                 trusted: wantsTrusted
                             },
                             plan: {
