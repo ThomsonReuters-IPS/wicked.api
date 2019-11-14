@@ -374,7 +374,7 @@ apis.getConfig = function (app, res, loggedInUserId, apiId) {
             if (!isAdmin) {
                 configReturn = {
                     api: {
-                        uris: configJson.api.uris,
+                        routes: configJson.api.routes,
                         host: configJson.api.host,
                         protocol: url.parse(configJson.api.upstream_url).protocol
                     }
